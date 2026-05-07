@@ -2,14 +2,19 @@ package com.example.Dawson.Bungalow.controller;
 
 import com.example.Dawson.Bungalow.dto.RoomRequest;
 import com.example.Dawson.Bungalow.dto.RoomResponse;
+import com.example.Dawson.Bungalow.service.ImageService;
 import com.example.Dawson.Bungalow.service.RoomService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -20,12 +25,11 @@ public class RoomController {
     @Autowired
     private RoomService roomService;
 
+    @Autowired
+    private ImageService imageService;
+
     // ── PUBLIC ENDPOINTS ──────────────────────────────────────────────────────
 
-    // GET /api/rooms
-    // Optional params: ?type=Deluxe&maxPrice=12000&guests=2&checkIn=2025-08-01&checkOut=2025-08-05
-    // When checkIn + checkOut are provided, each room in the response includes
-    // an `available` boolean computed from real booking data.
     @GetMapping
     public ResponseEntity<List<RoomResponse>> getRooms(
             @RequestParam(required = false) String type,
@@ -38,7 +42,6 @@ public class RoomController {
         return ResponseEntity.ok(rooms);
     }
 
-    // GET /api/rooms/{id}?checkIn=2025-08-01&checkOut=2025-08-05
     @GetMapping("/{id}")
     public ResponseEntity<?> getRoomById(
             @PathVariable String id,
@@ -54,39 +57,74 @@ public class RoomController {
 
     // ── ADMIN ENDPOINTS ───────────────────────────────────────────────────────
 
-    // GET /api/rooms/admin/all — all rooms, no date filters needed for admin dashboard
     @GetMapping("/admin/all")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<RoomResponse>> getAllRoomsAdmin() {
         return ResponseEntity.ok(roomService.getAllRooms(null, null));
     }
 
-    // POST /api/rooms/admin — create new room
-    @PostMapping("/admin")
+    /**
+     * POST /api/rooms/admin
+     * Creates a room AND uploads images in one single multipart request.
+     * Frontend sends FormData with room fields + image files.
+     */
+    @PostMapping(value = "/admin", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> createRoom(@RequestBody RoomRequest request) {
+    public ResponseEntity<?> createRoom(
+            @RequestParam("roomNumber") String roomNumber,
+            @RequestParam("type") String type,
+            @RequestParam("pricePerNight") double pricePerNight,
+            @RequestParam("capacity") int capacity,
+            @RequestParam("description") String description,
+            @RequestParam(value = "amenities", required = false) String amenitiesJson,
+            @RequestParam(value = "images", required = false) List<MultipartFile> images) {
         try {
-            RoomResponse room = roomService.createRoom(request);
+            RoomRequest request = buildRoomRequest(roomNumber, type, pricePerNight,
+                    capacity, description, amenitiesJson);
+
+            // Upload images to GridFS and get their IDs
+            List<String> imageIds = (images != null && !images.isEmpty())
+                    ? imageService.uploadImages(images)
+                    : List.of();
+
+            RoomResponse room = roomService.createRoom(request, imageIds);
             return ResponseEntity.ok(room);
-        } catch (RuntimeException e) {
+        } catch (IOException | RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
-    // PUT /api/rooms/admin/{id} — update room details
-    @PutMapping("/admin/{id}")
+    /**
+     * PUT /api/rooms/admin/{id}
+     * Updates room details. Optionally replaces images if new files are provided.
+     */
+    @PutMapping(value = "/admin/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> updateRoom(@PathVariable String id,
-                                        @RequestBody RoomRequest request) {
+    public ResponseEntity<?> updateRoom(
+            @PathVariable String id,
+            @RequestParam("roomNumber") String roomNumber,
+            @RequestParam("type") String type,
+            @RequestParam("pricePerNight") double pricePerNight,
+            @RequestParam("capacity") int capacity,
+            @RequestParam("description") String description,
+            @RequestParam(value = "amenities", required = false) String amenitiesJson,
+            @RequestParam(value = "images", required = false) List<MultipartFile> images) {
         try {
-            RoomResponse room = roomService.updateRoom(id, request);
+            RoomRequest request = buildRoomRequest(roomNumber, type, pricePerNight,
+                    capacity, description, amenitiesJson);
+
+            // If new images provided, upload them; otherwise keep existing
+            List<String> newImageIds = (images != null && !images.isEmpty())
+                    ? imageService.uploadImages(images)
+                    : null; // null = keep existing images
+
+            RoomResponse room = roomService.updateRoom(id, request, newImageIds);
             return ResponseEntity.ok(room);
-        } catch (RuntimeException e) {
+        } catch (IOException | RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
-    // DELETE /api/rooms/admin/{id}
     @DeleteMapping("/admin/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteRoom(@PathVariable String id) {
@@ -96,5 +134,61 @@ public class RoomController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
+    }
+
+    // ── IMAGE ENDPOINTS (ADMIN) ───────────────────────────────────────────────
+
+    @PostMapping(value = "/admin/{id}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> uploadRoomImages(
+            @PathVariable String id,
+            @RequestParam("images") List<MultipartFile> files) {
+        try {
+            List<String> imageIds = imageService.uploadImages(files);
+            RoomResponse room = roomService.addImagesToRoom(id, imageIds);
+            return ResponseEntity.ok(room);
+        } catch (IOException | RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/admin/{roomId}/images/{imageId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> deleteRoomImage(
+            @PathVariable String roomId,
+            @PathVariable String imageId) {
+        try {
+            RoomResponse room = roomService.removeImageFromRoom(roomId, imageId);
+            imageService.deleteImage(imageId);
+            return ResponseEntity.ok(room);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // ── Private helpers ───────────────────────────────────────────────────────
+
+    private RoomRequest buildRoomRequest(String roomNumber, String type, double pricePerNight,
+                                         int capacity, String description, String amenitiesJson) {
+        RoomRequest req = new RoomRequest();
+        req.setRoomNumber(roomNumber);
+        req.setType(type);
+        req.setPricePerNight(pricePerNight);
+        req.setCapacity(capacity);
+        req.setDescription(description);
+
+        // Parse amenities from JSON string sent by frontend
+        if (amenitiesJson != null && !amenitiesJson.isBlank()) {
+            try {
+                // Handles both ["WiFi","Pool"] and WiFi,Pool formats
+                String cleaned = amenitiesJson.replaceAll("[\\[\\]\"]", "").trim();
+                if (!cleaned.isBlank()) {
+                    req.setAmenities(Arrays.asList(cleaned.split(",\\s*")));
+                }
+            } catch (Exception e) {
+                req.setAmenities(List.of());
+            }
+        }
+        return req;
     }
 }

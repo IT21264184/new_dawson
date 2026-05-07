@@ -52,18 +52,26 @@ public class SecurityConfig {
                         // Allow preflight requests
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Public endpoints
-                        .requestMatchers("/api/auth/**").permitAll()   // login, register
-                        .requestMatchers("/api/rooms/**").permitAll()  // browse rooms
-                        .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll() // anyone can read reviews
+                        // Public auth endpoints
+                        .requestMatchers("/api/auth/**").permitAll()
 
-                        // Authenticated endpoints
-                        .requestMatchers(HttpMethod.POST, "/api/reviews/").authenticated() // must be logged in to submit review
+                        // ── Image serving (public) ──────────────────────────────────────
+                        .requestMatchers(HttpMethod.GET, "/api/images/**").permitAll()
 
-                        // Admin-only endpoints
-                        .requestMatchers(HttpMethod.DELETE, "/api/reviews/**").hasRole("ADMIN")
-                        .requestMatchers("/api/bookings/admin/**").hasRole("ADMIN")
+                        // ── Admin-only room endpoints (MUST come before the public room rule) ──
                         .requestMatchers("/api/rooms/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/rooms/admin/**").hasAuthority("ADMIN")
+
+                        // ── Public room browsing ────────────────────────────────────────
+                        .requestMatchers(HttpMethod.GET, "/api/rooms/**").permitAll()
+
+                        // ── Reviews ────────────────────────────────────────────────────
+                        .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/reviews/").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/reviews/**").hasRole("ADMIN")
+
+                        // ── Other admin endpoints ───────────────────────────────────────
+                        .requestMatchers("/api/bookings/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
                         // Everything else requires authentication

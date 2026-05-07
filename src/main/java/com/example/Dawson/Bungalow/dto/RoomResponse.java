@@ -5,10 +5,6 @@ import com.example.Dawson.Bungalow.model.Room;
 import java.time.LocalDateTime;
 import java.util.List;
 
-// This DTO is returned to the frontend.
-// It includes the Room data PLUS a computed `available` field
-// so the React UI knows whether the room is free for chosen dates.
-
 public class RoomResponse {
 
     private String id;
@@ -17,13 +13,13 @@ public class RoomResponse {
     private double pricePerNight;
     private int capacity;
     private String description;
-    private List<String> images;
+    private List<String> images;   // Now contains full URLs, not raw GridFS IDs
     private List<String> amenities;
     private LocalDateTime createdAt;
-    private Boolean available; // null when no dates requested, true/false when dates provided
+    private Boolean available;
 
-    // Build from a Room entity
-    public static RoomResponse from(Room room, Boolean available) {
+    // Takes resolved image URLs as a separate parameter
+    public static RoomResponse from(Room room, Boolean available, List<String> imageUrls) {
         RoomResponse r = new RoomResponse();
         r.id            = room.getId();
         r.roomNumber    = room.getRoomNumber();
@@ -31,7 +27,7 @@ public class RoomResponse {
         r.pricePerNight = room.getPricePerNight();
         r.capacity      = room.getCapacity();
         r.description   = room.getDescription();
-        r.images        = room.getImages();
+        r.images        = imageUrls;   // resolved URLs
         r.amenities     = room.getAmenities();
         r.createdAt     = room.getCreatedAt();
         r.available     = available;
