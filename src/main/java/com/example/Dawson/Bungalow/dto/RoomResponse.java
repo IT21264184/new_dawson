@@ -13,12 +13,12 @@ public class RoomResponse {
     private double pricePerNight;
     private int capacity;
     private String description;
-    private List<String> images;   // Now contains full URLs, not raw GridFS IDs
+    private List<String> images;
     private List<String> amenities;
     private LocalDateTime createdAt;
     private Boolean available;
+    private boolean isActive;   // ← NEW
 
-    // Takes resolved image URLs as a separate parameter
     public static RoomResponse from(Room room, Boolean available, List<String> imageUrls) {
         RoomResponse r = new RoomResponse();
         r.id            = room.getId();
@@ -27,10 +27,11 @@ public class RoomResponse {
         r.pricePerNight = room.getPricePerNight();
         r.capacity      = room.getCapacity();
         r.description   = room.getDescription();
-        r.images        = imageUrls;   // resolved URLs
+        r.images        = imageUrls;
         r.amenities     = room.getAmenities();
         r.createdAt     = room.getCreatedAt();
         r.available     = available;
+        r.isActive      = room.isActive();   // ← NEW
         return r;
     }
 
@@ -44,4 +45,5 @@ public class RoomResponse {
     public List<String> getAmenities() { return amenities; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public Boolean getAvailable() { return available; }
+    public boolean isActive() { return isActive; }   // ← NEW
 }

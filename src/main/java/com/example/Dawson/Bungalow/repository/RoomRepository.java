@@ -14,12 +14,12 @@ public interface RoomRepository extends MongoRepository<Room, String> {
 
     boolean existsByRoomNumber(String roomNumber);
 
-    // Filter by room type
     List<Room> findByType(String type);
 
-    // Filter by capacity (rooms that fit at least N guests)
     List<Room> findByCapacityGreaterThanEqual(int guests);
 
-    // Filter by price up to a max
     List<Room> findByPricePerNightLessThanEqual(double maxPrice);
+
+    // ← NEW: only fetch rooms that are active (for public endpoints)
+    List<Room> findByIsActiveTrue();
 }

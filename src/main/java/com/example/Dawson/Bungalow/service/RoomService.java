@@ -25,13 +25,12 @@ public class RoomService {
     @Autowired
     private ImageService imageService;
 
-    // Set this in application.properties: app.base-url=http://localhost:8080
     @Value("${app.base-url:http://localhost:8080}")
     private String baseUrl;
 
-    // ── Get all rooms ─────────────────────────────────────────────────────────
+    // ── Get all rooms (PUBLIC — only active rooms) ────────────────────────────
     public List<RoomResponse> getAllRooms(LocalDate checkIn, LocalDate checkOut) {
-        List<Room> rooms = roomRepository.findAll();
+        List<Room> rooms = roomRepository.findByIsActiveTrue();   // ← CHANGED
         return rooms.stream()
                 .map(room -> {
                     Boolean available = computeAvailability(room.getId(), checkIn, checkOut);
@@ -40,10 +39,10 @@ public class RoomService {
                 .toList();
     }
 
-    // ── Filter rooms ──────────────────────────────────────────────────────────
+    // ── Filter rooms (PUBLIC — only active rooms) ─────────────────────────────
     public List<RoomResponse> filterRooms(String type, Double maxPrice,
                                           Integer guests, LocalDate checkIn, LocalDate checkOut) {
-        List<Room> rooms = roomRepository.findAll();
+        List<Room> rooms = roomRepository.findByIsActiveTrue();   // ← CHANGED
         return rooms.stream()
                 .filter(r -> type == null || type.isBlank() || r.getType().equalsIgnoreCase(type))
                 .filter(r -> maxPrice == null || r.getPricePerNight() <= maxPrice)
@@ -55,18 +54,38 @@ public class RoomService {
                 .toList();
     }
 
-    // ── Get single room ───────────────────────────────────────────────────────
+    // ── Get single room (PUBLIC) ──────────────────────────────────────────────
     public RoomResponse getRoomById(String id, LocalDate checkIn, LocalDate checkOut) {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Room not found"));
+
+        // Inactive rooms are hidden from public view
+        if (!room.isActive()) {
+            throw new RuntimeException("Room not found");
+        }
+
         Boolean available = computeAvailability(id, checkIn, checkOut);
         return RoomResponse.from(room, available, toImageUrls(room.getImages()));
     }
 
-    // ── Availability check ────────────────────────────────────────────────────
-    public boolean isRoomAvailable(String roomId, LocalDate checkIn, LocalDate checkOut) {
-        if (checkIn == null || checkOut == null) return true;
-        return bookingRepository.findOverlappingBookings(roomId, checkIn, checkOut).isEmpty();
+    // ── Get ALL rooms including inactive (ADMIN only) ─────────────────────────
+    public List<RoomResponse> getAllRoomsAdmin() {
+        return roomRepository.findAll().stream()
+                .map(room -> {
+                    Boolean available = computeAvailability(room.getId(), null, null);
+                    return RoomResponse.from(room, available, toImageUrls(room.getImages()));
+                })
+                .toList();
+    }
+
+    // ── Toggle active/inactive (ADMIN only) ───────────────────────────────────
+    public RoomResponse toggleRoomStatus(String id) {
+        Room room = roomRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Room not found"));
+
+        room.setActive(!room.isActive());   // flip the flag
+        Room saved = roomRepository.save(room);
+        return RoomResponse.from(saved, null, toImageUrls(saved.getImages()));
     }
 
     // ── Create room ───────────────────────────────────────────────────────────
@@ -76,7 +95,7 @@ public class RoomService {
         }
         Room room = new Room();
         mapRequestToRoom(request, room);
-        room.setImages(imageIds); // set GridFS IDs directly
+        room.setImages(imageIds);
         Room saved = roomRepository.save(room);
         return RoomResponse.from(saved, null, toImageUrls(saved.getImages()));
     }
@@ -93,9 +112,8 @@ public class RoomService {
 
         mapRequestToRoom(request, room);
 
-        // Only replace images if new ones were uploaded
         if (newImageIds != null) {
-            imageService.deleteImages(room.getImages()); // delete old ones from GridFS
+            imageService.deleteImages(room.getImages());
             room.setImages(newImageIds);
         }
 
@@ -103,24 +121,21 @@ public class RoomService {
         return RoomResponse.from(saved, null, toImageUrls(saved.getImages()));
     }
 
-    // ── Delete room (also deletes its images from GridFS) ─────────────────────
+    // ── Delete room ───────────────────────────────────────────────────────────
     public void deleteRoom(String id) {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Room not found"));
-
-        // Clean up all GridFS images before deleting the room
         imageService.deleteImages(room.getImages());
         roomRepository.deleteById(id);
     }
 
-    // ── Add images to a room ──────────────────────────────────────────────────
+    // ── Add images ────────────────────────────────────────────────────────────
     public RoomResponse addImagesToRoom(String roomId, List<String> imageIds) {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new RuntimeException("Room not found"));
 
         List<String> existing = room.getImages() != null
-                ? new ArrayList<>(room.getImages())
-                : new ArrayList<>();
+                ? new ArrayList<>(room.getImages()) : new ArrayList<>();
         existing.addAll(imageIds);
         room.setImages(existing);
 
@@ -128,14 +143,13 @@ public class RoomService {
         return RoomResponse.from(saved, null, toImageUrls(saved.getImages()));
     }
 
-    // ── Remove one image from a room ──────────────────────────────────────────
+    // ── Remove one image ──────────────────────────────────────────────────────
     public RoomResponse removeImageFromRoom(String roomId, String imageId) {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new RuntimeException("Room not found"));
 
         List<String> images = new ArrayList<>(
-                room.getImages() != null ? room.getImages() : List.of()
-        );
+                room.getImages() != null ? room.getImages() : List.of());
         images.remove(imageId);
         room.setImages(images);
 
@@ -150,11 +164,6 @@ public class RoomService {
         return bookingRepository.findOverlappingBookings(roomId, checkIn, checkOut).isEmpty();
     }
 
-    /**
-     * Converts GridFS image IDs → full serving URLs.
-     * e.g. "abc123" → "http://localhost:8080/api/images/abc123"
-     * The frontend can use these directly in <img src="..."> tags.
-     */
     private List<String> toImageUrls(List<String> imageIds) {
         if (imageIds == null) return List.of();
         return imageIds.stream()
@@ -169,6 +178,6 @@ public class RoomService {
         room.setCapacity(req.getCapacity());
         room.setDescription(req.getDescription());
         room.setAmenities(req.getAmenities());
-        // images intentionally excluded — managed via GridFS separately
+        room.setActive(req.isActive());   // ← NEW: carry the flag through on create/update too
     }
 }

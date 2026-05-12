@@ -28,6 +28,8 @@ public class Room {
 
     private List<String> amenities;
 
+    private boolean isActive = true;  // ← NEW: true by default, admin can deactivate
+
     private LocalDateTime createdAt = LocalDateTime.now();
 
     // NOTE: No isAvailable field.
@@ -59,6 +61,9 @@ public class Room {
 
     public List<String> getAmenities() { return amenities; }
     public void setAmenities(List<String> amenities) { this.amenities = amenities; }
+
+    public boolean isActive() { return isActive; }          // ← NEW
+    public void setActive(boolean active) { isActive = active; }  // ← NEW
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

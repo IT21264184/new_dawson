@@ -60,8 +60,25 @@ public class RoomController {
     @GetMapping("/admin/all")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<RoomResponse>> getAllRoomsAdmin() {
-        return ResponseEntity.ok(roomService.getAllRooms(null, null));
+        return ResponseEntity.ok(roomService.getAllRoomsAdmin());   // ← CHANGED: uses admin version
     }
+
+    /**
+     * PATCH /api/rooms/admin/{id}/toggle-status
+     * Flips isActive between true and false.
+     */
+    @PatchMapping("/admin/{id}/toggle-status")          // ← NEW ENDPOINT
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> toggleRoomStatus(@PathVariable String id) {
+        try {
+            RoomResponse room = roomService.toggleRoomStatus(id);
+            return ResponseEntity.ok(room);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+// ... all other existing endpoints stay exactly the same
 
     /**
      * POST /api/rooms/admin
