@@ -70,6 +70,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/reviews/").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/reviews/**").hasRole("ADMIN")
 
+                        // ── Promotions ────────────────────────────────────────────────────
+                        .requestMatchers(HttpMethod.GET,  "/api/promotions/active").permitAll()
+                        .requestMatchers(HttpMethod.GET,  "/api/promotions/*/banner").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/promotions/validate").permitAll()
+                        .requestMatchers("/api/promotions/**").hasRole("ADMIN")
+
                         // ── Other admin endpoints ───────────────────────────────────────
                         .requestMatchers("/api/bookings/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
