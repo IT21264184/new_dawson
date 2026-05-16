@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -65,7 +66,17 @@ public class BookingService {
         booking.setCheckOutDate(request.getCheckOutDate());
         booking.setGuests(request.getGuests());
         booking.setSpecialRequests(request.getSpecialRequests());
+        booking.setPromoCode(request.getPromoCode());   // ✅ new field
         booking.setStatus("pending");
+
+// ✅ Use the discounted price from frontend if provided,
+//    otherwise fall back to calculating from room rate
+        if (request.getTotalPrice() != null && request.getTotalPrice() > 0) {
+            booking.setTotalPrice(request.getTotalPrice());              // trust frontend's discounted price
+        } else {
+            long nights = ChronoUnit.DAYS.between(request.getCheckInDate(), request.getCheckOutDate());
+            booking.setTotalPrice(nights * room.getPricePerNight());    // fallback calculation
+        }
 
         Booking saved = bookingRepository.save(booking);
 

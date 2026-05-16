@@ -40,7 +40,7 @@ public class ImageService {
                 file.getContentType(),
                 metadata
         );
-        return id.toString();
+        return id.toHexString();
     }
 
     /**

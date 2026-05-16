@@ -21,18 +21,17 @@ public class BookingResponse {
     private LocalDate checkOutDate;
     private int guests;
     private String specialRequests;
+    private String promoCode;         // ← new
     private long totalNights;
     private double totalPrice;
     private LocalDateTime createdAt;
 
-    // Embedded room summary
     private String roomId;
     private String roomNumber;
     private String roomType;
     private double pricePerNight;
     private List<String> roomImages;
 
-    // Embedded user summary
     private String userId;
     private String userName;
     private String userEmail;
@@ -47,20 +46,21 @@ public class BookingResponse {
         r.checkOutDate    = booking.getCheckOutDate();
         r.guests          = booking.getGuests();
         r.specialRequests = booking.getSpecialRequests();
+        r.promoCode       = booking.getPromoCode();               // ← new
         r.createdAt       = booking.getCreatedAt();
 
-        // Calculate nights and total price
         r.totalNights = ChronoUnit.DAYS.between(booking.getCheckInDate(), booking.getCheckOutDate());
-        r.totalPrice  = r.totalNights * room.getPricePerNight();
+        // Use persisted totalPrice if available, otherwise calculate from room rate
+        r.totalPrice  = booking.getTotalPrice() != null            // ← new
+                ? booking.getTotalPrice()
+                : r.totalNights * room.getPricePerNight();
 
-        // Room info
-        r.roomId       = room.getId();
-        r.roomNumber   = room.getRoomNumber();
-        r.roomType     = room.getType();
+        r.roomId        = room.getId();
+        r.roomNumber    = room.getRoomNumber();
+        r.roomType      = room.getType();
         r.pricePerNight = room.getPricePerNight();
-        r.roomImages   = room.getImages();
+        r.roomImages    = room.getImages();
 
-        // User info
         r.userId    = user.getId();
         r.userName  = user.getName();
         r.userEmail = user.getEmail();
@@ -69,13 +69,13 @@ public class BookingResponse {
         return r;
     }
 
-    // ── Getters ───────────────────────────────────────────────────────────────
     public String getId() { return id; }
     public String getStatus() { return status; }
     public LocalDate getCheckInDate() { return checkInDate; }
     public LocalDate getCheckOutDate() { return checkOutDate; }
     public int getGuests() { return guests; }
     public String getSpecialRequests() { return specialRequests; }
+    public String getPromoCode() { return promoCode; }            // ← new
     public long getTotalNights() { return totalNights; }
     public double getTotalPrice() { return totalPrice; }
     public LocalDateTime getCreatedAt() { return createdAt; }
@@ -89,4 +89,3 @@ public class BookingResponse {
     public String getUserEmail() { return userEmail; }
     public String getUserPhone() { return userPhone; }
 }
-

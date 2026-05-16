@@ -15,21 +15,22 @@ public class BookingRequest {
     private LocalDate checkOutDate;
 
     private int guests;
-
     private String specialRequests;
+    private String promoCode;         // ← new
+    private Double totalPrice;
 
     public String getRoomId() { return roomId; }
     public void setRoomId(String roomId) { this.roomId = roomId; }
-
     public LocalDate getCheckInDate() { return checkInDate; }
     public void setCheckInDate(LocalDate checkInDate) { this.checkInDate = checkInDate; }
-
     public LocalDate getCheckOutDate() { return checkOutDate; }
     public void setCheckOutDate(LocalDate checkOutDate) { this.checkOutDate = checkOutDate; }
-
     public int getGuests() { return guests; }
     public void setGuests(int guests) { this.guests = guests; }
-
     public String getSpecialRequests() { return specialRequests; }
     public void setSpecialRequests(String specialRequests) { this.specialRequests = specialRequests; }
+    public String getPromoCode() { return promoCode; }            // ← new
+    public void setPromoCode(String promoCode) { this.promoCode = promoCode; }
+    public Double getTotalPrice() { return totalPrice; }
+    public void setTotalPrice(Double totalPrice) { this.totalPrice = totalPrice; }// ← new
 }
