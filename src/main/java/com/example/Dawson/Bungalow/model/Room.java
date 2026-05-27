@@ -16,7 +16,7 @@ public class Room {
     @Indexed(unique = true)
     private String roomNumber;
 
-    private String type;            // Single, Double, Deluxe, Suite
+    private String type;
 
     private double pricePerNight;
 
@@ -28,13 +28,11 @@ public class Room {
 
     private List<String> amenities;
 
-    private boolean isActive = true;  // ← NEW: true by default, admin can deactivate
+    private boolean isActive = true;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    // NOTE: No isAvailable field.
-    // Availability is calculated dynamically by checking whether any
-    // confirmed or pending booking overlaps the requested date range.
+
 
     public Room() {}
 
@@ -62,8 +60,8 @@ public class Room {
     public List<String> getAmenities() { return amenities; }
     public void setAmenities(List<String> amenities) { this.amenities = amenities; }
 
-    public boolean isActive() { return isActive; }          // ← NEW
-    public void setActive(boolean active) { isActive = active; }  // ← NEW
+    public boolean isActive() { return isActive; }
+    public void setActive(boolean active) { isActive = active; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

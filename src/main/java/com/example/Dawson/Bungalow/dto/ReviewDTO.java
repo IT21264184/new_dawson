@@ -16,7 +16,7 @@ public class ReviewDTO {
     @Size(min = 10, max = 1000, message = "Comment must be between 10 and 1000 characters")
     private String comment;
 
-    // Constructors
+
     public ReviewDTO() {}
 
     public ReviewDTO(String name, int rating, String comment) {
@@ -25,7 +25,7 @@ public class ReviewDTO {
         this.comment = comment;
     }
 
-    // Getters and Setters
+
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 

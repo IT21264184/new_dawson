@@ -17,7 +17,7 @@ public class AdminController {
     @Autowired
     private UserRepository userRepository;
 
-    // GET /api/admin/users
+
     @GetMapping("/users")
     public ResponseEntity<?> getAllUsers() {
         return ResponseEntity.ok(userRepository.findAll());

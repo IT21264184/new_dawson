@@ -1,6 +1,5 @@
 package com.example.Dawson.Bungalow.security;
 
-import com.example.Dawson.Bungalow.service.AuthService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

@@ -17,7 +17,7 @@ public class RoomResponse {
     private List<String> amenities;
     private LocalDateTime createdAt;
     private Boolean available;
-    private boolean isActive;   // ← NEW
+    private boolean isActive;
 
     public static RoomResponse from(Room room, Boolean available, List<String> imageUrls) {
         RoomResponse r = new RoomResponse();
@@ -31,7 +31,7 @@ public class RoomResponse {
         r.amenities     = room.getAmenities();
         r.createdAt     = room.getCreatedAt();
         r.available     = available;
-        r.isActive      = room.isActive();   // ← NEW
+        r.isActive      = room.isActive();
         return r;
     }
 

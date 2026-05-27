@@ -29,24 +29,13 @@ public class PromotionController {
     @Autowired
     private PromotionService promotionService;
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    //  PUBLIC ENDPOINTS
-    // ═══════════════════════════════════════════════════════════════════════════
 
-    /**
-     * GET /api/promotions/active
-     * Returns all active, non-expired promotions (for the guest-facing page)
-     */
     @GetMapping("/active")
     public ResponseEntity<List<Promotion>> getActivePromotions() {
         return ResponseEntity.ok(promotionService.getActivePromotions());
     }
 
-    /**
-     * POST /api/promotions/validate
-     * Validates a promo code entered by a guest during booking
-     * Body: { "promoCode": "SUMMER20" }
-     */
+
     @PostMapping("/validate")
     public ResponseEntity<?> validatePromoCode(@RequestBody Map<String, String> body) {
         String code = body.get("promoCode");
@@ -65,10 +54,7 @@ public class PromotionController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * GET /api/promotions/{id}/banner
-     * Streams the banner image from GridFS (public, no auth needed)
-     */
+
     @GetMapping("/{id}/banner")
     public ResponseEntity<byte[]> getBannerImage(@PathVariable String id) {
         Promotion promotion = promotionService.getById(id)
@@ -92,14 +78,7 @@ public class PromotionController {
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    //  ADMIN ENDPOINTS  (require ADMIN role via JWT)
-    // ═══════════════════════════════════════════════════════════════════════════
 
-    /**
-     * GET /api/promotions
-     * Admin: get all promotions (including inactive/expired)
-     */
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Promotion>> getAllPromotions() {
@@ -108,13 +87,6 @@ public class PromotionController {
 
 
 
-    /**
-     * POST /api/promotions
-     * Admin: create a promotion with optional banner image
-     * Content-Type: multipart/form-data
-     *   - Fields: title, promoCode, description, discountPercentage, expiryDate, active
-     *   - File:   bannerImage (optional)
-     */
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> createPromotion(
@@ -144,10 +116,7 @@ public class PromotionController {
         }
     }
 
-    /**
-     * PUT /api/promotions/{id}
-     * Admin: update a promotion
-     */
+
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updatePromotion(
@@ -167,10 +136,7 @@ public class PromotionController {
         }
     }
 
-    /**
-     * PATCH /api/promotions/{id}/toggle
-     * Admin: enable or disable a promotion
-     */
+
     @PatchMapping("/{id}/toggle")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> togglePromotion(@PathVariable String id) {
@@ -186,10 +152,7 @@ public class PromotionController {
         }
     }
 
-    /**
-     * DELETE /api/promotions/{id}
-     * Admin: delete a promotion (also removes banner from GridFS)
-     */
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deletePromotion(@PathVariable String id) {
@@ -201,10 +164,7 @@ public class PromotionController {
         }
     }
 
-    /**
-     * POST /api/promotions/{id}/banner
-     * Admin: upload or replace only the banner image
-     */
+
     @PostMapping(value = "/{id}/banner", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> uploadBanner(

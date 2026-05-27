@@ -15,25 +15,25 @@ public class Promotion {
     private String title;
 
     @Indexed(unique = true)
-    private String promoCode;          // e.g. "SUMMER20"
+    private String promoCode;
 
     private String description;
 
-    private double discountPercentage; // e.g. 20.0
+    private double discountPercentage;
 
-    private String bannerImageId;      // GridFS file ID for the banner image
+    private String bannerImageId;
 
     private LocalDateTime expiryDate;
 
-    private boolean active;            // Admin can enable/disable
+    private boolean active;
 
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
 
-    private String createdBy;          // Admin username/id who created it
+    private String createdBy;
 
-    // ─── Constructors ───────────────────────────────────────────────────────────
+
 
     public Promotion() {
         this.createdAt = LocalDateTime.now();
@@ -41,7 +41,7 @@ public class Promotion {
         this.active = true;
     }
 
-    // ─── Getters & Setters ──────────────────────────────────────────────────────
+
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }

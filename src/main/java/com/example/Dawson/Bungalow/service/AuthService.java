@@ -23,7 +23,7 @@ public class AuthService {
     @Autowired
     private JwtUtil jwtUtil;
 
-    // ── Register ─────────────────────────────────────────────────────────────
+
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already in use");
@@ -41,7 +41,7 @@ public class AuthService {
         return new AuthResponse(token, user.getId(), user.getName(), user.getEmail(), user.getRole());
     }
 
-    // ── Login ─────────────────────────────────────────────────────────────────
+
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Invalid email or password"));
@@ -54,13 +54,13 @@ public class AuthService {
         return new AuthResponse(token, user.getId(), user.getName(), user.getEmail(), user.getRole());
     }
 
-    // ── Get Profile ───────────────────────────────────────────────────────────
+
     public User getProfile(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
-    // ── Update Profile ────────────────────────────────────────────────────────
+
     public User updateProfile(String email, UpdateProfileRequest request) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -72,7 +72,7 @@ public class AuthService {
         return userRepository.save(user);
     }
 
-    // ── Change Password ───────────────────────────────────────────────────────
+
     public void changePassword(String email, String currentPassword, String newPassword) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));

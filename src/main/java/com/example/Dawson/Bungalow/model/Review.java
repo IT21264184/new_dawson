@@ -30,7 +30,7 @@ public class Review {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime createdAt;
 
-    // Constructors
+
     public Review() {}
 
     public Review(String name, int rating, String comment) {

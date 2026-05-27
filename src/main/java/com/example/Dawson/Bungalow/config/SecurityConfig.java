@@ -27,26 +27,25 @@ public class SecurityConfig {
     @Autowired
     private JwtFilter jwtFilter;
 
-    // Password encoder for hashing user passwords
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // AuthenticationManager bean for login/auth flows
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
-    // Main security filter chain
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // disable CSRF for APIs
+                .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // enable global CORS
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS) // stateless sessions for JWT
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
                         // Allow preflight requests
@@ -55,35 +54,32 @@ public class SecurityConfig {
                         // Public auth endpoints
                         .requestMatchers("/api/auth/**").permitAll()
 
-                        // ── Image serving (public) ──────────────────────────────────────
                         .requestMatchers(HttpMethod.GET, "/api/images/**").permitAll()
 
-                        // ── Admin-only room endpoints (MUST come before the public room rule) ──
                         .requestMatchers("/api/rooms/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/rooms/admin/**").hasAuthority("ADMIN")
 
-                        // ── Public room browsing ────────────────────────────────────────
                         .requestMatchers(HttpMethod.GET, "/api/rooms/**").permitAll()
 
-                        // ── Reviews ────────────────────────────────────────────────────
                         .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/reviews/").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/reviews/**").hasRole("ADMIN")
 
-                        // ── Promotions ────────────────────────────────────────────────────
                         .requestMatchers(HttpMethod.GET,  "/api/promotions/active").permitAll()
                         .requestMatchers(HttpMethod.GET,  "/api/promotions/*/banner").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/promotions/validate").permitAll()
                         .requestMatchers("/api/promotions/**").hasRole("ADMIN")
 
-                        // ── Other admin endpoints ───────────────────────────────────────
                         .requestMatchers("/api/bookings/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                        // Everything else requires authentication
+                        .requestMatchers(HttpMethod.POST, "/chat").permitAll()
+                        .requestMatchers(HttpMethod.GET,  "/health").permitAll()
+
+
                         .anyRequest().authenticated()
                 )
-                // Add JWT filter before username/password filter
+
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -95,9 +91,13 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOrigins(List.of(
-                "http://127.0.0.1:5500",
-                "http://localhost:5500",
-                "https://dowson.netlify.app"
+                "http://127.0.0.1:5501",
+                "https://dowson.netlify.app",
+                "https://dawson-bungalow.gihanq1.workers.dev",
+                "https://kandydawsonbungalow.com",         // production custom domain
+                "https://www.kandydawsonbungalow.com",     // www variant
+                "https://dawsonbungalow.shiranwije.workers.dev", // worker URL
+                "https://dawsonbungalow-preview.shiranwije.workers.dev"// preview
         ));
 
         config.setAllowedMethods(List.of(

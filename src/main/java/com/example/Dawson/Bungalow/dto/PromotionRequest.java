@@ -3,7 +3,6 @@ package com.example.Dawson.Bungalow.dto;
 import jakarta.validation.constraints.*;
 import java.time.LocalDateTime;
 
-// ─── Request DTO ─────────────────────────────────────────────────────────────
 
 public class PromotionRequest {
 
@@ -27,7 +26,6 @@ public class PromotionRequest {
 
     private boolean active = true;
 
-    // Getters & Setters
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
 
@@ -48,7 +46,6 @@ public class PromotionRequest {
 }
 
 
-// ─── Response DTO ─────────────────────────────────────────────────────────────
 
 class PromotionResponse {
 
@@ -57,13 +54,13 @@ class PromotionResponse {
     private String promoCode;
     private String description;
     private double discountPercentage;
-    private String bannerImageUrl;   // full URL to fetch the banner via /api/promotions/{id}/banner
+    private String bannerImageUrl;
     private String expiryDate;
     private boolean active;
     private boolean expired;
     private String createdAt;
 
-    // Getters & Setters
+
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
@@ -96,7 +93,7 @@ class PromotionResponse {
 }
 
 
-// ─── Promo Code Validation Request ───────────────────────────────────────────
+
 
 class PromoCodeValidationRequest {
 
@@ -108,7 +105,7 @@ class PromoCodeValidationRequest {
 }
 
 
-// ─── Promo Code Validation Response ──────────────────────────────────────────
+
 
 class PromoCodeValidationResponse {
 

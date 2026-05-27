@@ -28,27 +28,21 @@ public class BookingService {
     @Autowired
     private UserRepository userRepository;
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // CUSTOMER METHODS
-    // ─────────────────────────────────────────────────────────────────────────
 
     public BookingResponse createBooking(String userId, BookingRequest request) {
 
-        // 1. Validate dates
+
         validateDates(request.getCheckInDate(), request.getCheckOutDate());
 
-        // 2. Load room
         Room room = roomRepository.findById(request.getRoomId())
                 .orElseThrow(() -> new RuntimeException("Room not found"));
 
-        // 3. Check guest capacity
         if (request.getGuests() > room.getCapacity()) {
             throw new RuntimeException(
                     "This room fits up to " + room.getCapacity() +
                             " guests. You requested " + request.getGuests() + ".");
         }
 
-        // 4. Check availability — reject if any pending/confirmed booking overlaps
         List<?> overlaps = bookingRepository.findOverlappingBookings(
                 request.getRoomId(),
                 request.getCheckInDate(),
@@ -58,7 +52,6 @@ public class BookingService {
             throw new RuntimeException("Room is not available for the selected dates.");
         }
 
-        // 5. Build and save booking
         Booking booking = new Booking();
         booking.setUserId(userId);
         booking.setRoomId(request.getRoomId());
@@ -66,21 +59,19 @@ public class BookingService {
         booking.setCheckOutDate(request.getCheckOutDate());
         booking.setGuests(request.getGuests());
         booking.setSpecialRequests(request.getSpecialRequests());
-        booking.setPromoCode(request.getPromoCode());   // ✅ new field
+        booking.setPromoCode(request.getPromoCode());
         booking.setStatus("pending");
 
-// ✅ Use the discounted price from frontend if provided,
-//    otherwise fall back to calculating from room rate
+
         if (request.getTotalPrice() != null && request.getTotalPrice() > 0) {
-            booking.setTotalPrice(request.getTotalPrice());              // trust frontend's discounted price
+            booking.setTotalPrice(request.getTotalPrice());
         } else {
             long nights = ChronoUnit.DAYS.between(request.getCheckInDate(), request.getCheckOutDate());
-            booking.setTotalPrice(nights * room.getPricePerNight());    // fallback calculation
+            booking.setTotalPrice(nights * room.getPricePerNight());
         }
 
         Booking saved = bookingRepository.save(booking);
 
-        // 6. Enrich and return
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -126,9 +117,6 @@ public class BookingService {
         return enrich(bookingRepository.save(booking));
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // ADMIN METHODS
-    // ─────────────────────────────────────────────────────────────────────────
 
     public List<BookingResponse> getAllBookings() {
         return bookingRepository.findAllByOrderByCreatedAtDesc()
@@ -174,9 +162,6 @@ public class BookingService {
         return enrich(bookingRepository.save(booking));
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // SHARED HELPER — used by BookingController to convert email → userId
-    // ─────────────────────────────────────────────────────────────────────────
 
     public String resolveUserIdByEmail(String email) {
         return userRepository.findByEmail(email)
@@ -184,9 +169,6 @@ public class BookingService {
                 .getId();
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // PRIVATE HELPERS
-    // ─────────────────────────────────────────────────────────────────────────
 
     private BookingResponse enrich(Booking booking) {
         Room room = roomRepository.findById(booking.getRoomId())

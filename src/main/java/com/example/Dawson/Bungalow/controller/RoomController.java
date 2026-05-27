@@ -28,7 +28,6 @@ public class RoomController {
     @Autowired
     private ImageService imageService;
 
-    // ── PUBLIC ENDPOINTS ──────────────────────────────────────────────────────
 
     @GetMapping
     public ResponseEntity<List<RoomResponse>> getRooms(
@@ -55,19 +54,16 @@ public class RoomController {
         }
     }
 
-    // ── ADMIN ENDPOINTS ───────────────────────────────────────────────────────
+
 
     @GetMapping("/admin/all")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<RoomResponse>> getAllRoomsAdmin() {
-        return ResponseEntity.ok(roomService.getAllRoomsAdmin());   // ← CHANGED: uses admin version
+        return ResponseEntity.ok(roomService.getAllRoomsAdmin());
     }
 
-    /**
-     * PATCH /api/rooms/admin/{id}/toggle-status
-     * Flips isActive between true and false.
-     */
-    @PatchMapping("/admin/{id}/toggle-status")          // ← NEW ENDPOINT
+
+    @PatchMapping("/admin/{id}/toggle-status")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> toggleRoomStatus(@PathVariable String id) {
         try {
@@ -78,13 +74,7 @@ public class RoomController {
         }
     }
 
-// ... all other existing endpoints stay exactly the same
 
-    /**
-     * POST /api/rooms/admin
-     * Creates a room AND uploads images in one single multipart request.
-     * Frontend sends FormData with room fields + image files.
-     */
     @PostMapping(value = "/admin", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> createRoom(
@@ -99,7 +89,7 @@ public class RoomController {
             RoomRequest request = buildRoomRequest(roomNumber, type, pricePerNight,
                     capacity, description, amenitiesJson);
 
-            // Upload images to GridFS and get their IDs
+
             List<String> imageIds = (images != null && !images.isEmpty())
                     ? imageService.uploadImages(images)
                     : List.of();
@@ -111,10 +101,7 @@ public class RoomController {
         }
     }
 
-    /**
-     * PUT /api/rooms/admin/{id}
-     * Updates room details. Optionally replaces images if new files are provided.
-     */
+
     @PutMapping(value = "/admin/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateRoom(
@@ -130,7 +117,7 @@ public class RoomController {
             RoomRequest request = buildRoomRequest(roomNumber, type, pricePerNight,
                     capacity, description, amenitiesJson);
 
-            // If new images provided, upload them; otherwise keep existing
+
             List<String> newImageIds = (images != null && !images.isEmpty())
                     ? imageService.uploadImages(images)
                     : null; // null = keep existing images
@@ -153,7 +140,7 @@ public class RoomController {
         }
     }
 
-    // ── IMAGE ENDPOINTS (ADMIN) ───────────────────────────────────────────────
+
 
     @PostMapping(value = "/admin/{id}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
@@ -183,7 +170,7 @@ public class RoomController {
         }
     }
 
-    // ── Private helpers ───────────────────────────────────────────────────────
+
 
     private RoomRequest buildRoomRequest(String roomNumber, String type, double pricePerNight,
                                          int capacity, String description, String amenitiesJson) {
@@ -194,10 +181,10 @@ public class RoomController {
         req.setCapacity(capacity);
         req.setDescription(description);
 
-        // Parse amenities from JSON string sent by frontend
+
         if (amenitiesJson != null && !amenitiesJson.isBlank()) {
             try {
-                // Handles both ["WiFi","Pool"] and WiFi,Pool formats
+
                 String cleaned = amenitiesJson.replaceAll("[\\[\\]\"]", "").trim();
                 if (!cleaned.isBlank()) {
                     req.setAmenities(Arrays.asList(cleaned.split(",\\s*")));

@@ -16,7 +16,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/reviews")
-@CrossOrigin(origins = "*") // Update with your frontend URL in production
+
 public class ReviewController {
 
     private final ReviewService reviewService;

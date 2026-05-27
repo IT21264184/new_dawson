@@ -20,6 +20,5 @@ public interface RoomRepository extends MongoRepository<Room, String> {
 
     List<Room> findByPricePerNightLessThanEqual(double maxPrice);
 
-    // ← NEW: only fetch rooms that are active (for public endpoints)
     List<Room> findByIsActiveTrue();
 }

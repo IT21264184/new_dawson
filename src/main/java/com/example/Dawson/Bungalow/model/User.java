@@ -21,13 +21,13 @@ public class User {
 
     private String phone;
 
-    private String role = "customer"; // customer | admin
+    private String role = "customer";
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
     private LocalDateTime updatedAt = LocalDateTime.now();
 
-    // Constructors
+
     public User() {}
 
     public User(String name, String email, String password, String phone) {
@@ -37,7 +37,7 @@ public class User {
         this.phone = phone;
     }
 
-    // Getters & Setters
+
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 

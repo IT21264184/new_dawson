@@ -11,7 +11,7 @@ public class RoomRequest {
     private String description;
     private List<String> images;
     private List<String> amenities;
-    private boolean isActive = true;   // ← NEW
+    private boolean isActive = true;
 
     public String getRoomNumber() { return roomNumber; }
     public void setRoomNumber(String roomNumber) { this.roomNumber = roomNumber; }
@@ -34,6 +34,6 @@ public class RoomRequest {
     public List<String> getAmenities() { return amenities; }
     public void setAmenities(List<String> amenities) { this.amenities = amenities; }
 
-    public boolean isActive() { return isActive; }          // ← NEW
-    public void setActive(boolean active) { isActive = active; }  // ← NEW
+    public boolean isActive() { return isActive; }
+    public void setActive(boolean active) { isActive = active; }
 }

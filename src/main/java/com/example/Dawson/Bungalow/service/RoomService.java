@@ -28,9 +28,9 @@ public class RoomService {
     @Value("${app.base-url:http://localhost:8080}")
     private String baseUrl;
 
-    // ── Get all rooms (PUBLIC — only active rooms) ────────────────────────────
+
     public List<RoomResponse> getAllRooms(LocalDate checkIn, LocalDate checkOut) {
-        List<Room> rooms = roomRepository.findByIsActiveTrue();   // ← CHANGED
+        List<Room> rooms = roomRepository.findByIsActiveTrue();
         return rooms.stream()
                 .map(room -> {
                     Boolean available = computeAvailability(room.getId(), checkIn, checkOut);
@@ -39,10 +39,10 @@ public class RoomService {
                 .toList();
     }
 
-    // ── Filter rooms (PUBLIC — only active rooms) ─────────────────────────────
+
     public List<RoomResponse> filterRooms(String type, Double maxPrice,
                                           Integer guests, LocalDate checkIn, LocalDate checkOut) {
-        List<Room> rooms = roomRepository.findByIsActiveTrue();   // ← CHANGED
+        List<Room> rooms = roomRepository.findByIsActiveTrue();
         return rooms.stream()
                 .filter(r -> type == null || type.isBlank() || r.getType().equalsIgnoreCase(type))
                 .filter(r -> maxPrice == null || r.getPricePerNight() <= maxPrice)
@@ -54,12 +54,12 @@ public class RoomService {
                 .toList();
     }
 
-    // ── Get single room (PUBLIC) ──────────────────────────────────────────────
+
     public RoomResponse getRoomById(String id, LocalDate checkIn, LocalDate checkOut) {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Room not found"));
 
-        // Inactive rooms are hidden from public view
+
         if (!room.isActive()) {
             throw new RuntimeException("Room not found");
         }
@@ -68,7 +68,7 @@ public class RoomService {
         return RoomResponse.from(room, available, toImageUrls(room.getImages()));
     }
 
-    // ── Get ALL rooms including inactive (ADMIN only) ─────────────────────────
+
     public List<RoomResponse> getAllRoomsAdmin() {
         return roomRepository.findAll().stream()
                 .map(room -> {
@@ -78,17 +78,17 @@ public class RoomService {
                 .toList();
     }
 
-    // ── Toggle active/inactive (ADMIN only) ───────────────────────────────────
+
     public RoomResponse toggleRoomStatus(String id) {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Room not found"));
 
-        room.setActive(!room.isActive());   // flip the flag
+        room.setActive(!room.isActive());
         Room saved = roomRepository.save(room);
         return RoomResponse.from(saved, null, toImageUrls(saved.getImages()));
     }
 
-    // ── Create room ───────────────────────────────────────────────────────────
+
     public RoomResponse createRoom(RoomRequest request, List<String> imageIds) {
         if (roomRepository.existsByRoomNumber(request.getRoomNumber())) {
             throw new RuntimeException("Room number " + request.getRoomNumber() + " already exists");
@@ -100,7 +100,7 @@ public class RoomService {
         return RoomResponse.from(saved, null, toImageUrls(saved.getImages()));
     }
 
-    // ── Update room ───────────────────────────────────────────────────────────
+
     public RoomResponse updateRoom(String id, RoomRequest request, List<String> newImageIds) {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Room not found"));
@@ -121,7 +121,7 @@ public class RoomService {
         return RoomResponse.from(saved, null, toImageUrls(saved.getImages()));
     }
 
-    // ── Delete room ───────────────────────────────────────────────────────────
+
     public void deleteRoom(String id) {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Room not found"));
@@ -129,7 +129,7 @@ public class RoomService {
         roomRepository.deleteById(id);
     }
 
-    // ── Add images ────────────────────────────────────────────────────────────
+
     public RoomResponse addImagesToRoom(String roomId, List<String> imageIds) {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new RuntimeException("Room not found"));
@@ -143,7 +143,7 @@ public class RoomService {
         return RoomResponse.from(saved, null, toImageUrls(saved.getImages()));
     }
 
-    // ── Remove one image ──────────────────────────────────────────────────────
+
     public RoomResponse removeImageFromRoom(String roomId, String imageId) {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new RuntimeException("Room not found"));
@@ -157,7 +157,7 @@ public class RoomService {
         return RoomResponse.from(saved, null, toImageUrls(saved.getImages()));
     }
 
-    // ── Private helpers ───────────────────────────────────────────────────────
+
 
     private Boolean computeAvailability(String roomId, LocalDate checkIn, LocalDate checkOut) {
         if (checkIn == null || checkOut == null) return null;
@@ -178,6 +178,6 @@ public class RoomService {
         room.setCapacity(req.getCapacity());
         room.setDescription(req.getDescription());
         room.setAmenities(req.getAmenities());
-        room.setActive(req.isActive());   // ← NEW: carry the flag through on create/update too
+        room.setActive(req.isActive());
     }
 }

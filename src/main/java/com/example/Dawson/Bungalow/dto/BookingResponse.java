@@ -9,9 +9,6 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-// Returned to the frontend — combines Booking data with
-// enriched Room details and User name so the UI doesn't
-// need to make extra API calls.
 
 public class BookingResponse {
 
@@ -46,12 +43,12 @@ public class BookingResponse {
         r.checkOutDate    = booking.getCheckOutDate();
         r.guests          = booking.getGuests();
         r.specialRequests = booking.getSpecialRequests();
-        r.promoCode       = booking.getPromoCode();               // ← new
+        r.promoCode       = booking.getPromoCode();
         r.createdAt       = booking.getCreatedAt();
 
         r.totalNights = ChronoUnit.DAYS.between(booking.getCheckInDate(), booking.getCheckOutDate());
-        // Use persisted totalPrice if available, otherwise calculate from room rate
-        r.totalPrice  = booking.getTotalPrice() != null            // ← new
+
+        r.totalPrice  = booking.getTotalPrice() != null
                 ? booking.getTotalPrice()
                 : r.totalNights * room.getPricePerNight();
 
@@ -75,7 +72,7 @@ public class BookingResponse {
     public LocalDate getCheckOutDate() { return checkOutDate; }
     public int getGuests() { return guests; }
     public String getSpecialRequests() { return specialRequests; }
-    public String getPromoCode() { return promoCode; }            // ← new
+    public String getPromoCode() { return promoCode; }
     public long getTotalNights() { return totalNights; }
     public double getTotalPrice() { return totalPrice; }
     public LocalDateTime getCreatedAt() { return createdAt; }

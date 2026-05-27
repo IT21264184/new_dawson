@@ -15,11 +15,7 @@ public class ImageController {
     @Autowired
     private ImageService imageService;
 
-    /**
-     * GET /api/images/{id}
-     * Serves the raw image bytes. Frontend uses this URL directly in <img src="...">.
-     * Example: <img src="http://localhost:8080/api/images/abc123" />
-     */
+
     @GetMapping("/{id}")
     public ResponseEntity<byte[]> getImage(@PathVariable String id) {
         try {

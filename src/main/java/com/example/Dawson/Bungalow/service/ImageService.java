@@ -26,9 +26,7 @@ public class ImageService {
     @Autowired
     private GridFsOperations gridFsOperations;
 
-    /**
-     * Upload a single image and return its GridFS ID string.
-     */
+
     public String uploadImage(MultipartFile file) throws IOException {
         DBObject metadata = new BasicDBObject();
         metadata.put("contentType", file.getContentType());
@@ -43,9 +41,7 @@ public class ImageService {
         return id.toHexString();
     }
 
-    /**
-     * Upload multiple images and return a list of GridFS ID strings.
-     */
+
     public List<String> uploadImages(List<MultipartFile> files) throws IOException {
         List<String> ids = new ArrayList<>();
         for (MultipartFile file : files) {
@@ -54,9 +50,7 @@ public class ImageService {
         return ids;
     }
 
-    /**
-     * Retrieve raw image bytes by GridFS ID.
-     */
+
     public byte[] getImageById(String id) throws IOException {
         GridFSFile file = gridFsTemplate.findOne(
                 new Query(Criteria.where("_id").is(new ObjectId(id)))
@@ -68,9 +62,7 @@ public class ImageService {
         return resource.getInputStream().readAllBytes();
     }
 
-    /**
-     * Get content type of an image by GridFS ID.
-     */
+
     public String getContentType(String id) {
         GridFSFile file = gridFsTemplate.findOne(
                 new Query(Criteria.where("_id").is(new ObjectId(id)))
@@ -81,18 +73,14 @@ public class ImageService {
                 : "image/jpeg";
     }
 
-    /**
-     * Delete a single image by GridFS ID.
-     */
+
     public void deleteImage(String id) {
         gridFsTemplate.delete(
                 new Query(Criteria.where("_id").is(new ObjectId(id)))
         );
     }
 
-    /**
-     * Delete multiple images by their GridFS IDs.
-     */
+
     public void deleteImages(List<String> ids) {
         if (ids == null) return;
         for (String id : ids) {

@@ -33,7 +33,7 @@ public class PromotionService {
     @Autowired
     private GridFsOperations gridFsOperations;
 
-    // ─── Admin: Create Promotion ──────────────────────────────────────────────
+
 
     public Promotion createPromotion(PromotionRequest request, MultipartFile bannerImage) throws IOException {
 
@@ -58,14 +58,13 @@ public class PromotionService {
         return promotionRepository.save(promotion);
     }
 
-    // ─── Admin: Update Promotion ──────────────────────────────────────────────
 
     public Promotion updatePromotion(String id, PromotionRequest request, MultipartFile bannerImage) throws IOException {
 
         Promotion promotion = promotionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Promotion not found with id: " + id));
 
-        // Check if new promo code conflicts with another promotion
+
         if (!promotion.getPromoCode().equalsIgnoreCase(request.getPromoCode())) {
             if (promotionRepository.existsByPromoCode(request.getPromoCode().toUpperCase())) {
                 throw new IllegalArgumentException("Promo code '" + request.getPromoCode() + "' already exists.");
@@ -81,7 +80,7 @@ public class PromotionService {
         promotion.setUpdatedAt(LocalDateTime.now());
 
         if (bannerImage != null && !bannerImage.isEmpty()) {
-            // Delete old banner from GridFS if exists
+
             if (promotion.getBannerImageId() != null) {
                 deleteBannerImage(promotion.getBannerImageId());
             }
@@ -92,7 +91,6 @@ public class PromotionService {
         return promotionRepository.save(promotion);
     }
 
-    // ─── Admin: Toggle Active/Inactive ───────────────────────────────────────
 
     public Promotion togglePromotion(String id) {
         Promotion promotion = promotionRepository.findById(id)
@@ -103,7 +101,6 @@ public class PromotionService {
         return promotionRepository.save(promotion);
     }
 
-    // ─── Admin: Delete Promotion ──────────────────────────────────────────────
 
     public void deletePromotion(String id) {
         Promotion promotion = promotionRepository.findById(id)
@@ -116,25 +113,21 @@ public class PromotionService {
         promotionRepository.deleteById(id);
     }
 
-    // ─── Admin: Get All Promotions ────────────────────────────────────────────
 
     public List<Promotion> getAllPromotions() {
         return promotionRepository.findAll();
     }
 
-    // ─── Public: Get Active + Non-Expired Promotions ──────────────────────────
 
     public List<Promotion> getActivePromotions() {
         return promotionRepository.findAllByActiveTrueAndExpiryDateAfter(LocalDateTime.now());
     }
 
-    // ─── Public: Get Single Promotion ────────────────────────────────────────
 
     public Optional<Promotion> getById(String id) {
         return promotionRepository.findById(id);
     }
 
-    // ─── Public: Validate Promo Code (used during booking) ───────────────────
 
     public PromoValidationResult validatePromoCode(String code) {
         Optional<Promotion> opt = promotionRepository.findByPromoCode(code.toUpperCase().trim());
@@ -157,7 +150,6 @@ public class PromotionService {
                 "Promo code applied! You get " + promo.getDiscountPercentage() + "% off.");
     }
 
-    // ─── GridFS: Store Banner Image ───────────────────────────────────────────
 
     public String storeBannerImage(MultipartFile file) throws IOException {
         String contentType = file.getContentType() != null ? file.getContentType() : "image/jpeg";
@@ -165,7 +157,6 @@ public class PromotionService {
         return fileId.toHexString();
     }
 
-    // ─── GridFS: Load Banner Image ────────────────────────────────────────────
 
     public InputStream getBannerImage(String fileId) throws IOException {
         GridFSFile file = gridFsTemplate.findOne(
@@ -175,19 +166,16 @@ public class PromotionService {
         return gridFsOperations.getResource(file).getInputStream();
     }
 
-    // ─── GridFS: Delete Banner Image ──────────────────────────────────────────
 
     private void deleteBannerImage(String fileId) {
         gridFsTemplate.delete(new Query(Criteria.where("_id").is(new ObjectId(fileId))));
     }
 
-    // ─── Helper: Get Current Logged-in Username from JWT ─────────────────────
 
     private String getCurrentUsername() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 
-    // ─── Inner Result Class ───────────────────────────────────────────────────
 
     public static class PromoValidationResult {
         private boolean valid;
